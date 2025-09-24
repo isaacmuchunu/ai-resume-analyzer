@@ -1,8 +1,8 @@
 import { useState, useRef } from 'react';
 import { Head, router, useForm } from '@inertiajs/react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Card } from '@/components/ui/Card';
 import {
     Upload,
     FileText,
@@ -28,8 +28,9 @@ export default function ResumeUpload({ subscription }: UploadProps) {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const { data, setData, post, processing, errors, reset } = useForm({
-        resume_file: null as File | null,
-        job_description: '',
+        file: null as File | null,
+        target_role: '',
+        target_industry: '',
     });
 
     const handleDrag = (e: React.DragEvent) => {
@@ -73,12 +74,12 @@ export default function ResumeUpload({ subscription }: UploadProps) {
         }
 
         setSelectedFile(file);
-        setData('resume_file', file);
+        setData('file', file);
     };
 
     const removeFile = () => {
         setSelectedFile(null);
-        setData('resume_file', null);
+        setData('file', null);
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }
@@ -87,15 +88,16 @@ export default function ResumeUpload({ subscription }: UploadProps) {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!data.resume_file) {
+        if (!data.file) {
             alert('Please select a file to upload.');
             return;
         }
 
-        post(route('resumes.upload'), {
+        post('/resumes/upload', {
             forceFormData: true,
             onProgress: (progress) => {
-                setUploadProgress(Math.round(progress.percentage || 0));
+                const pct = progress && typeof progress.percentage === 'number' ? progress.percentage : 0;
+                setUploadProgress(Math.round(pct));
             },
             onSuccess: () => {
                 setSelectedFile(null);
@@ -248,29 +250,30 @@ export default function ResumeUpload({ subscription }: UploadProps) {
                                 )}
                             </div>
 
-                            {errors.resume_file && (
+                            {errors.file && (
                                 <p className="mt-2 text-sm text-red-600 dark:text-red-400">
-                                    {errors.resume_file}
+                                    {errors.file}
                                 </p>
                             )}
                         </Card>
 
-                        {/* Job Description (Optional) */}
+                        {/* Optional metadata */}
                         <Card className="p-8">
-                            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
-                                Target Job Description (Optional)
-                            </h2>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                                Paste a job description to get targeted feedback on how well your resume matches the role.
-                            </p>
-
-                            <textarea
-                                value={data.job_description}
-                                onChange={(e) => setData('job_description', e.target.value)}
-                                placeholder="Paste the job description here..."
-                                className="w-full min-h-[120px] px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-slate-500 focus:border-transparent"
-                                disabled={processing}
-                            />
+                            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Optional Details</h2>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <Input
+                                    value={data.target_role}
+                                    onChange={(e) => setData('target_role', e.target.value)}
+                                    placeholder="Target role (e.g., Senior Backend Engineer)"
+                                    disabled={processing}
+                                />
+                                <Input
+                                    value={data.target_industry}
+                                    onChange={(e) => setData('target_industry', e.target.value)}
+                                    placeholder="Target industry (e.g., FinTech)"
+                                    disabled={processing}
+                                />
+                            </div>
                         </Card>
 
                         {/* Upload Progress */}

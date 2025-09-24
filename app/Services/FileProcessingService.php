@@ -42,30 +42,51 @@ class FileProcessingService
 
     private function extractFromPdf(string $filePath): string
     {
-        // For now, we'll use a simple approach
-        // In production, you'd want to use a library like Spatie/pdf-to-text or smalot/pdfparser
-
         try {
-            // Try using pdftotext if available
+            // Try using pdftotext if available (best option)
             if ($this->commandExists('pdftotext')) {
                 $output = shell_exec("pdftotext '{$filePath}' -");
                 if ($output !== null && trim($output) !== '') {
-                    return trim($output);
+                    return $this->cleanExtractedText(trim($output));
                 }
             }
 
-            // Fallback: basic PDF text extraction
+            // Try Python based extraction if available
+            if ($this->commandExists('python3')) {
+                $pythonScript = $this->createTempPythonScript();
+                $output = shell_exec("python3 {$pythonScript} '{$filePath}' 2>/dev/null");
+                if ($output !== null && trim($output) !== '') {
+                    return $this->cleanExtractedText(trim($output));
+                }
+            }
+
+            // Fallback: basic PDF text extraction using regex
             $content = file_get_contents($filePath);
             if ($content === false) {
                 throw new Exception('Could not read PDF file');
             }
 
-            // Simple regex-based text extraction (basic approach)
-            preg_match_all('/\(([^)]+)\)/', $content, $matches);
-            $text = implode(' ', $matches[1]);
+            // Improved regex-based text extraction
+            $text = '';
+
+            // Extract text objects
+            if (preg_match_all('/\(([^)]+)\)/', $content, $matches)) {
+                $text .= implode(' ', $matches[1]) . ' ';
+            }
+
+            // Extract text streams
+            if (preg_match_all('/stream\s*(.*?)\s*endstream/s', $content, $matches)) {
+                foreach ($matches[1] as $stream) {
+                    // Basic decompression attempt
+                    $decoded = @gzuncompress($stream);
+                    if ($decoded !== false) {
+                        $text .= $decoded . ' ';
+                    }
+                }
+            }
 
             if (empty(trim($text))) {
-                return 'Unable to extract text from PDF. Please try a different format.';
+                return 'Unable to extract text from PDF. Please try a different format or ensure the PDF contains selectable text.';
             }
 
             return $this->cleanExtractedText($text);
@@ -73,6 +94,37 @@ class FileProcessingService
         } catch (Exception $e) {
             return 'Error extracting text from PDF: ' . $e->getMessage();
         }
+    }
+
+    private function createTempPythonScript(): string
+    {
+        $script = <<<PYTHON
+import sys
+try:
+    import PyPDF2
+    with open(sys.argv[1], 'rb') as file:
+        reader = PyPDF2.PdfReader(file)
+        text = ''
+        for page in reader.pages:
+            text += page.extract_text()
+        print(text)
+except ImportError:
+    try:
+        import fitz  # PyMuPDF
+        doc = fitz.open(sys.argv[1])
+        text = ''
+        for page in doc:
+            text += page.get_text()
+        print(text)
+    except ImportError:
+        print('No PDF library available')
+except Exception as e:
+    print(f'Error: {e}')
+PYTHON;
+
+        $tempFile = tempnam(sys_get_temp_dir(), 'pdf_extract_') . '.py';
+        file_put_contents($tempFile, $script);
+        return $tempFile;
     }
 
     private function extractFromWord(string $filePath): string

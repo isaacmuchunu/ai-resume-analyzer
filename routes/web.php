@@ -10,6 +10,9 @@ Route::get('/', function () {
     return Inertia::render('Welcome');
 })->name('welcome');
 
+// Webhooks (no authentication required)
+Route::post('/webhooks/stripe', [\App\Http\Controllers\WebhookController::class, 'stripe'])->name('webhooks.stripe');
+
 // For development/demo purposes, allow direct access without strict tenant requirements
 Route::middleware(['web'])->group(function () {
 
@@ -32,6 +35,13 @@ Route::middleware(['web'])->group(function () {
             Route::post('/change-plan', [\App\Http\Controllers\SubscriptionController::class, 'changePlan'])->name('change-plan');
             Route::post('/cancel', [\App\Http\Controllers\SubscriptionController::class, 'cancel'])->name('cancel');
             Route::get('/usage', [\App\Http\Controllers\SubscriptionController::class, 'usage'])->name('usage');
+
+            // Stripe payment integration
+            Route::post('/checkout', [\App\Http\Controllers\SubscriptionController::class, 'checkout'])->name('checkout');
+            Route::get('/success', [\App\Http\Controllers\SubscriptionController::class, 'success'])->name('success');
+            Route::get('/cancel-checkout', [\App\Http\Controllers\SubscriptionController::class, 'checkoutCancel'])->name('cancel-checkout');
+            Route::post('/portal', [\App\Http\Controllers\SubscriptionController::class, 'portal'])->name('portal');
+            Route::post('/cancel-subscription', [\App\Http\Controllers\SubscriptionController::class, 'cancelSubscription'])->name('cancel-subscription');
         });
 
         // Resume management
@@ -55,6 +65,13 @@ Route::middleware(['web'])->group(function () {
             Route::post('/{resume}/reanalyze', [ResumeController::class, 'reanalyze'])
                 ->middleware('check.subscription:reanalyze')
                 ->name('reanalyze');
+
+            // Editor
+            Route::get('/{resume}/editor', [\App\Http\Controllers\EditorController::class, 'show'])->name('editor');
+            Route::post('/{resume}/editor/suggest', [\App\Http\Controllers\EditorController::class, 'suggest'])->name('editor.suggest');
+            Route::post('/{resume}/editor/save', [\App\Http\Controllers\EditorController::class, 'saveVersion'])->name('editor.save');
+            Route::get('/{resume}/editor/versions', [\App\Http\Controllers\EditorController::class, 'versions'])->name('editor.versions');
+            Route::post('/{resume}/editor/versions/{version}/restore', [\App\Http\Controllers\EditorController::class, 'restoreVersion'])->name('editor.versions.restore');
         });
 
         // Settings management
@@ -65,6 +82,17 @@ Route::middleware(['web'])->group(function () {
             Route::put('/notifications', [\App\Http\Controllers\SettingsController::class, 'updateNotifications'])->name('notifications.update');
             Route::put('/appearance', [\App\Http\Controllers\SettingsController::class, 'updateAppearance'])->name('appearance.update');
             Route::delete('/account', [\App\Http\Controllers\SettingsController::class, 'deleteAccount'])->name('account.delete');
+        });
+
+        // Notification management
+        Route::prefix('notifications')->name('notifications.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\NotificationController::class, 'index'])->name('index');
+            Route::get('/api', [\App\Http\Controllers\NotificationController::class, 'api'])->name('api');
+            Route::get('/unread-count', [\App\Http\Controllers\NotificationController::class, 'unreadCount'])->name('unread-count');
+            Route::post('/{notification}/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('mark-as-read');
+            Route::post('/mark-all-read', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('mark-all-read');
+            Route::delete('/{notification}', [\App\Http\Controllers\NotificationController::class, 'destroy'])->name('destroy');
+            Route::post('/test', [\App\Http\Controllers\NotificationController::class, 'test'])->name('test');
         });
 
     });

@@ -1,6 +1,6 @@
 import { PropsWithChildren } from 'react';
 import { Head, Link, usePage } from '@inertiajs/react';
-import { User, FileText, BarChart3, Settings, LogOut, Menu, X } from 'lucide-react';
+import { User, FileText, BarChart3, Settings, LogOut, Menu, X, Bell } from 'lucide-react';
 import { useState } from 'react';
 
 interface AppLayoutProps extends PropsWithChildren {

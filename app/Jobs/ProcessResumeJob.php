@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Events\AnalysisCompleted;
 use App\Models\Resume;
 use App\Models\Tenant;
 use App\Services\AnthropicService;
@@ -142,6 +143,12 @@ class ProcessResumeJob implements ShouldQueue
             ]);
 
             $this->resume->update(['analysis_status' => 'completed']);
+
+            // Fire event for notifications
+            $analysisResult = $this->resume->latestAnalysis();
+            if ($analysisResult) {
+                event(new AnalysisCompleted($this->resume, $analysisResult));
+            }
 
             Log::info('Resume analysis completed', [
                 'resume_id' => $this->resume->id,

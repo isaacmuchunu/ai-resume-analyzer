@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/label';
-import { Card } from '@/components/ui/card';
+import { Card } from '@/components/ui/Card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
     ArrowLeft,

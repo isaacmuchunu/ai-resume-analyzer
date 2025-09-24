@@ -4,42 +4,127 @@ namespace App\Http\Controllers;
 
 use App\Models\UserSubscription;
 use App\Models\ActivityLog;
+use App\Services\PaymentService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
+use Exception;
 
 class SubscriptionController extends Controller
 {
+    public function __construct(
+        private PaymentService $paymentService
+    ) {}
     public function index(Request $request)
     {
         $user = $request->user();
-        $subscription = $user->subscription;
+        $subscription = $user->activeSubscription;
+        $plans = $this->paymentService->getAvailablePlans();
+
+        $usageStats = null;
+        if ($subscription) {
+            $usageStats = $this->paymentService->getUsageStats($user);
+        }
 
         return Inertia::render('Subscription/Index', [
             'subscription' => $subscription ? [
                 'id' => $subscription->id,
                 'plan' => $subscription->plan,
                 'status' => $subscription->status,
-                'resumes_limit' => $subscription->resumes_limit,
-                'resumes_used' => $subscription->resumes_used,
-                'remaining_resumes' => $subscription->remaining_resumes,
-                'usage_percentage' => $subscription->usage_percentage,
-                'period_starts_at' => $subscription->period_starts_at,
-                'period_ends_at' => $subscription->period_ends_at,
-                'days_remaining' => $subscription->days_remaining,
-                'features' => $subscription->features,
+                'stripe_customer_id' => $subscription->stripe_customer_id,
+                'stripe_subscription_id' => $subscription->stripe_subscription_id,
+                'current_period_start' => $subscription->current_period_start,
+                'current_period_end' => $subscription->current_period_end,
+                'trial_ends_at' => $subscription->trial_ends_at,
+                'cancelled_at' => $subscription->cancelled_at,
+                'resumes_limit' => $subscription->resumes_limit ?? -1,
+                'resumes_used' => $subscription->resumes_used ?? 0,
+                'remaining_resumes' => $subscription->remaining_resumes ?? -1,
+                'usage_percentage' => $subscription->usage_percentage ?? 0,
+                'features' => $subscription->features ?? [],
                 'is_active' => $subscription->isActive(),
                 'is_expired' => $subscription->isExpired(),
             ] : null,
-            'available_plans' => $this->getAvailablePlans(),
+            'available_plans' => $plans,
+            'usage_stats' => $usageStats,
         ]);
     }
 
     public function upgrade()
     {
         return Inertia::render('Subscription/Upgrade', [
-            'available_plans' => $this->getAvailablePlans(),
+            'available_plans' => $this->paymentService->getAvailablePlans(),
             'current_plan' => auth()->user()->getCurrentPlan(),
         ]);
+    }
+
+    /**
+     * Create checkout session
+     */
+    public function checkout(Request $request)
+    {
+        $request->validate([
+            'plan' => 'required|string|in:starter,professional,enterprise',
+        ]);
+
+        $user = Auth::user();
+        $result = $this->paymentService->createCheckoutSession(
+            $user,
+            $request->plan,
+            $request->only(['upgrade'])
+        );
+
+        if ($result['success']) {
+            return response()->json([
+                'checkout_url' => $result['checkout_url']
+            ]);
+        }
+
+        return response()->json([
+            'error' => $result['error']
+        ], 422);
+    }
+
+    /**
+     * Handle successful checkout
+     */
+    public function success(Request $request)
+    {
+        $sessionId = $request->query('session_id');
+
+        return Inertia::render('Subscription/Success', [
+            'sessionId' => $sessionId,
+            'message' => 'Your subscription has been activated successfully!'
+        ]);
+    }
+
+    /**
+     * Handle cancelled checkout
+     */
+    public function checkoutCancel()
+    {
+        return Inertia::render('Subscription/Cancel', [
+            'message' => 'Subscription checkout was cancelled.'
+        ]);
+    }
+
+    /**
+     * Create customer portal session
+     */
+    public function portal()
+    {
+        $user = Auth::user();
+        $result = $this->paymentService->createPortalSession($user);
+
+        if ($result['success']) {
+            return response()->json([
+                'portal_url' => $result['portal_url']
+            ]);
+        }
+
+        return response()->json([
+            'error' => $result['error']
+        ], 422);
     }
 
     public function changePlan(Request $request)
@@ -80,6 +165,33 @@ class SubscriptionController extends Controller
             ->with('success', "Successfully upgraded to {$newPlan} plan!");
     }
 
+    /**
+     * Cancel subscription
+     */
+    public function cancelSubscription(Request $request)
+    {
+        $request->validate([
+            'immediately' => 'boolean'
+        ]);
+
+        $user = Auth::user();
+        $result = $this->paymentService->cancelSubscription(
+            $user,
+            $request->boolean('immediately', false)
+        );
+
+        if ($result['success']) {
+            return response()->json([
+                'message' => $result['message'],
+                'ends_at' => $result['ends_at']
+            ]);
+        }
+
+        return response()->json([
+            'error' => $result['error']
+        ], 422);
+    }
+
     public function cancel(Request $request)
     {
         $user = $request->user();
@@ -102,22 +214,16 @@ class SubscriptionController extends Controller
 
     public function usage(Request $request)
     {
-        $user = $request->user();
-        $subscription = $user->activeSubscription;
-
-        if (!$subscription) {
-            return response()->json(['error' => 'No active subscription'], 404);
-        }
-
-        return response()->json([
-            'usage' => [
-                'resumes_used' => $subscription->resumes_used,
-                'resumes_limit' => $subscription->resumes_limit,
-                'remaining_resumes' => $subscription->remaining_resumes,
-                'usage_percentage' => $subscription->usage_percentage,
-                'can_upload' => $subscription->canUploadResume(),
-            ]
+        $request->validate([
+            'period' => 'string|in:current_month,last_month,current_billing'
         ]);
+
+        $user = $request->user();
+        $period = $request->get('period', 'current_month');
+
+        $stats = $this->paymentService->getUsageStats($user, $period);
+
+        return response()->json($stats);
     }
 
     private function getAvailablePlans(): array

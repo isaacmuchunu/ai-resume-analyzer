@@ -42,6 +42,16 @@ class Resume extends Model
         return $this->hasMany(AnalysisResult::class);
     }
 
+    public function versions(): HasMany
+    {
+        return $this->hasMany(ResumeVersion::class);
+    }
+
+    public function suggestions(): HasMany
+    {
+        return $this->hasMany(ResumeSuggestion::class);
+    }
+
     public function latestAnalysis(): ?AnalysisResult
     {
         return $this->analysisResults()->latest()->first();
