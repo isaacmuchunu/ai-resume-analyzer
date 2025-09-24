@@ -28,6 +28,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'tenant' => NeedsTenant::class,
             'tenant.session' => EnsureValidTenantSession::class,
+            'track.activity' => \App\Http\Middleware\TrackUserActivity::class,
+            'check.subscription' => \App\Http\Middleware\CheckSubscription::class,
+            'is.admin' => \App\Http\Middleware\IsAdmin::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

@@ -38,7 +38,12 @@ class Tenant extends BaseTenant
 
     public function isCurrent(): bool
     {
-        return optional(app('currentTenant'))->getKey() === $this->getKey();
+        if (!app()->bound('currentTenant')) {
+            return false;
+        }
+
+        $currentTenant = app('currentTenant');
+        return $currentTenant && $currentTenant->getKey() === $this->getKey();
     }
 
     public function getDatabaseName(): string

@@ -1,367 +1,340 @@
-import { useState } from 'react';
-import { Head, useForm, router } from '@inertiajs/react';
-import AppLayout from '@/layouts/AppLayout';
-import FileUpload from '@/components/FileUpload';
-import { Button } from '@/components/ui/Button';
+import { Head, Link, usePage, router } from '@inertiajs/react';
 import {
     FileText,
+    Plus,
     BarChart3,
-    TrendingUp,
-    Clock,
-    CheckCircle,
-    AlertTriangle,
+    Settings,
+    LogOut,
     Upload,
+    TrendingUp,
+    Crown,
+    Users,
     Zap,
     Target,
     Award
 } from 'lucide-react';
-import { cn, formatScore, getScoreColor, getScoreGrade, formatDate } from '@/lib/utils';
+import { Button } from '@/components/ui/Button';
+import { Avatar, AvatarFallback } from '@/components/ui/Avatar';
+import { StatsCard } from '@/components/dashboard/StatsCard';
+import { ResumeCard } from '@/components/dashboard/ResumeCard';
+import { SubscriptionCard } from '@/components/dashboard/SubscriptionCard';
+import { ActivityFeed } from '@/components/dashboard/ActivityFeed';
 
 interface DashboardProps {
     tenant: {
         name: string;
         plan: string;
-        branding?: any;
+        branding: any;
     };
     user: {
         id: number;
         email: string;
         first_name: string;
         last_name: string;
+        full_name: string;
+        initials: string;
         role: string;
+        current_plan: string;
     };
     stats: {
         total_resumes: number;
         analyzed_resumes: number;
         average_score: number;
         recent_uploads: number;
+        processing_resumes: number;
+        failed_analyses: number;
     };
-    recent_resumes: Array<{
-        id: number;
-        original_filename: string;
-        analysis_status: string;
-        created_at: string;
-        latest_analysis?: {
-            overall_score: number;
-        };
-    }>;
+    recent_resumes: any[];
+    subscription?: any;
+    weekly_analytics: any;
+    recent_activity: any[];
 }
 
-export default function Dashboard({ tenant, user, stats, recent_resumes }: DashboardProps) {
-    const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const [isUploading, setIsUploading] = useState(false);
-    const [uploadProgress, setUploadProgress] = useState(0);
-    const [uploadError, setUploadError] = useState<string | null>(null);
+export default function Dashboard() {
+    const { tenant, user, stats, recent_resumes, subscription, weekly_analytics, recent_activity } = usePage<DashboardProps>().props;
 
-    const { data, setData, post, processing } = useForm({
-        file: null as File | null,
-        target_role: '',
-        target_industry: '',
-    });
-
-    const handleFileSelect = (file: File) => {
-        setSelectedFile(file);
-        setData('file', file);
-        setUploadError(null);
+    const handleLogout = () => {
+        router.post('/logout');
     };
 
-    const handleFileRemove = () => {
-        setSelectedFile(null);
-        setData('file', null);
-        setUploadError(null);
-    };
-
-    const handleUpload = () => {
-        if (!selectedFile) return;
-
-        setIsUploading(true);
-        setUploadProgress(0);
-
-        const formData = new FormData();
-        formData.append('file', selectedFile);
-        formData.append('target_role', data.target_role);
-        formData.append('target_industry', data.target_industry);
-
-        // Simulate upload progress
-        const progressInterval = setInterval(() => {
-            setUploadProgress(prev => {
-                if (prev >= 90) {
-                    clearInterval(progressInterval);
-                    return prev;
-                }
-                return prev + 10;
-            });
-        }, 200);
-
-        post('/resumes/upload', {
-            data: formData,
-            onSuccess: () => {
-                setUploadProgress(100);
-                setTimeout(() => {
-                    setIsUploading(false);
-                    setSelectedFile(null);
-                    setData('file', null);
-                    router.reload();
-                }, 1000);
-            },
-            onError: (errors) => {
-                clearInterval(progressInterval);
-                setIsUploading(false);
-                setUploadError(errors.file || 'Upload failed. Please try again.');
-            },
-        });
-    };
-
-    const quickStats = [
-        {
-            name: 'Total Resumes',
-            value: stats.total_resumes,
-            icon: FileText,
-            color: 'text-blue-600',
-            bgColor: 'bg-blue-50',
-        },
-        {
-            name: 'Analyzed',
-            value: stats.analyzed_resumes,
-            icon: CheckCircle,
-            color: 'text-green-600',
-            bgColor: 'bg-green-50',
-        },
-        {
-            name: 'Average Score',
-            value: stats.average_score > 0 ? formatScore(stats.average_score) : 'N/A',
-            icon: BarChart3,
-            color: getScoreColor(stats.average_score),
-            bgColor: stats.average_score >= 80 ? 'bg-green-50' : stats.average_score >= 60 ? 'bg-yellow-50' : 'bg-red-50',
-        },
-        {
-            name: 'Recent Uploads',
-            value: stats.recent_uploads,
-            icon: TrendingUp,
-            color: 'text-purple-600',
-            bgColor: 'bg-purple-50',
-        },
-    ];
-
-    const getStatusIcon = (status: string) => {
-        switch (status) {
-            case 'completed':
-                return <CheckCircle className="h-4 w-4 text-green-500" />;
-            case 'processing':
-                return <Clock className="h-4 w-4 text-yellow-500" />;
-            case 'failed':
-                return <AlertTriangle className="h-4 w-4 text-red-500" />;
-            default:
-                return <Clock className="h-4 w-4 text-gray-400" />;
+    const handleDeleteResume = (id: number) => {
+        if (confirm('Are you sure you want to delete this resume?')) {
+            router.delete(`/resumes/${id}`);
         }
     };
 
-    const getStatusText = (status: string) => {
-        switch (status) {
-            case 'completed':
-                return 'Analyzed';
-            case 'processing':
-                return 'Processing';
-            case 'failed':
-                return 'Failed';
-            default:
-                return 'Pending';
-        }
+    const handleReanalyzeResume = (id: number) => {
+        router.post(`/resumes/${id}/reanalyze`);
     };
 
     return (
-        <AppLayout title="Dashboard" tenant={tenant} user={user}>
-            <div className="p-6 space-y-6">
-                {/* Header */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-                        <p className="text-gray-600">Welcome back, {user.first_name}!</p>
-                    </div>
-                    <div className="mt-4 sm:mt-0">
-                        <Button
-                            onClick={() => router.visit('/resumes')}
-                            className="inline-flex items-center"
-                        >
-                            <FileText className="h-4 w-4 mr-2" />
-                            View All Resumes
-                        </Button>
-                    </div>
-                </div>
+        <>
+            <Head title="Dashboard" />
 
-                {/* Quick Stats */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {quickStats.map((stat) => {
-                        const Icon = stat.icon;
-                        return (
-                            <div key={stat.name} className="bg-white rounded-lg border p-6">
-                                <div className="flex items-center">
-                                    <div className={cn('p-2 rounded-lg', stat.bgColor)}>
-                                        <Icon className={cn('h-6 w-6', stat.color)} />
-                                    </div>
-                                    <div className="ml-4">
-                                        <p className="text-sm font-medium text-gray-600">{stat.name}</p>
-                                        <p className={cn('text-2xl font-bold', stat.color)}>
-                                            {stat.value}
-                                        </p>
+            <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+                {/* Header */}
+                <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex justify-between items-center py-4">
+                            {/* Logo */}
+                            <div className="flex items-center space-x-3">
+                                <div className="h-10 w-10 bg-slate-800 rounded-lg flex items-center justify-center">
+                                    <FileText className="h-6 w-6 text-white" />
+                                </div>
+                                <div>
+                                    <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+                                        {tenant.name}
+                                    </h1>
+                                </div>
+                            </div>
+
+                            {/* Navigation */}
+                            <nav className="hidden md:flex items-center space-x-6">
+                                <Link
+                                    href="/dashboard"
+                                    className="text-slate-700 hover:text-slate-800 font-medium"
+                                >
+                                    Dashboard
+                                </Link>
+                                <Link
+                                    href="/resumes"
+                                    className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+                                >
+                                    Resumes
+                                </Link>
+                                <Link
+                                    href="/analytics"
+                                    className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+                                >
+                                    Analytics
+                                </Link>
+                                <Link
+                                    href="/subscription"
+                                    className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white flex items-center space-x-1"
+                                >
+                                    <Crown className="h-4 w-4" />
+                                    <span>Subscription</span>
+                                </Link>
+                            </nav>
+
+                            {/* User Menu */}
+                            <div className="flex items-center space-x-4">
+                                <Button asChild>
+                                    <Link href="/resumes/upload">
+                                        <Plus className="h-4 w-4 mr-2" />
+                                        Upload Resume
+                                    </Link>
+                                </Button>
+
+                                <div className="relative group">
+                                    <Avatar className="h-8 w-8 cursor-pointer">
+                                        <AvatarFallback className="bg-slate-100 text-slate-700 text-sm font-medium">
+                                            {user.initials}
+                                        </AvatarFallback>
+                                    </Avatar>
+
+                                    <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 hidden group-hover:block z-10">
+                                        <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+                                            <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                                {user.full_name}
+                                            </p>
+                                            <p className="text-sm text-gray-500">{user.email}</p>
+                                        </div>
+                                        <Link
+                                            href="/settings"
+                                            className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                        >
+                                            <Settings className="h-4 w-4 mr-2" />
+                                            Settings
+                                        </Link>
+                                        <button
+                                            onClick={handleLogout}
+                                            className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                        >
+                                            <LogOut className="h-4 w-4 mr-2" />
+                                            Sign Out
+                                        </button>
                                     </div>
                                 </div>
                             </div>
-                        );
-                    })}
-                </div>
+                        </div>
+                    </div>
+                </header>
 
-                {/* Main Content Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* File Upload Section */}
-                    <div className="lg:col-span-2">
-                        <div className="bg-white rounded-lg border p-6">
-                            <div className="flex items-center space-x-2 mb-6">
-                                <Upload className="h-5 w-5 text-blue-600" />
-                                <h2 className="text-lg font-semibold text-gray-900">Upload Resume</h2>
-                            </div>
+                {/* Main Content */}
+                <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    {/* Welcome Header */}
+                    <div className="mb-8">
+                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                            Welcome back, {user.first_name}!
+                        </h1>
+                        <p className="text-gray-600 dark:text-gray-400">
+                            Here's what's happening with your resumes today.
+                        </p>
+                    </div>
 
-                            <div className="space-y-4">
-                                <FileUpload
-                                    onFileSelect={handleFileSelect}
-                                    onFileRemove={handleFileRemove}
-                                    selectedFile={selectedFile}
-                                    isUploading={isUploading}
-                                    uploadProgress={uploadProgress}
-                                    error={uploadError}
-                                />
+                    {/* Stats Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <StatsCard
+                            title="Total Resumes"
+                            value={stats.total_resumes}
+                            description="All uploaded resumes"
+                            icon={<FileText className="h-4 w-4" />}
+                            trend={stats.recent_uploads > 0 ? 'up' : 'neutral'}
+                            trendValue={`+${stats.recent_uploads} this week`}
+                        />
+                        <StatsCard
+                            title="Analyzed"
+                            value={stats.analyzed_resumes}
+                            description="Successfully analyzed"
+                            icon={<BarChart3 className="h-4 w-4" />}
+                            trend="up"
+                            trendValue="12% completion rate"
+                        />
+                        <StatsCard
+                            title="Average Score"
+                            value={stats.average_score > 0 ? `${stats.average_score}/100` : 'N/A'}
+                            description="Overall performance"
+                            icon={<Award className="h-4 w-4" />}
+                            trend={stats.average_score >= 75 ? 'up' : stats.average_score >= 60 ? 'neutral' : 'down'}
+                            trendValue={`${stats.average_score >= 75 ? 'Excellent' : stats.average_score >= 60 ? 'Good' : 'Needs work'}`}
+                        />
+                        <StatsCard
+                            title="Processing"
+                            value={stats.processing_resumes}
+                            description="Currently analyzing"
+                            icon={<Zap className="h-4 w-4" />}
+                            trend="neutral"
+                        />
+                    </div>
 
-                                {selectedFile && (
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                Target Role (Optional)
-                                            </label>
-                                            <input
-                                                type="text"
-                                                value={data.target_role}
-                                                onChange={(e) => setData('target_role', e.target.value)}
-                                                placeholder="e.g., Software Engineer"
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                disabled={isUploading}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        {/* Main Content */}
+                        <div className="lg:col-span-2 space-y-6">
+                            {/* Recent Resumes */}
+                            <div>
+                                <div className="flex items-center justify-between mb-6">
+                                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                        Recent Resumes
+                                    </h2>
+                                    <Button variant="outline" size="sm" asChild>
+                                        <Link href="/resumes">
+                                            View All
+                                        </Link>
+                                    </Button>
+                                </div>
+
+                                {recent_resumes.length > 0 ? (
+                                    <div className="space-y-4">
+                                        {recent_resumes.map((resume) => (
+                                            <ResumeCard
+                                                key={resume.id}
+                                                resume={resume}
+                                                onDelete={handleDeleteResume}
+                                                onReanalyze={handleReanalyzeResume}
                                             />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                Target Industry (Optional)
-                                            </label>
-                                            <input
-                                                type="text"
-                                                value={data.target_industry}
-                                                onChange={(e) => setData('target_industry', e.target.value)}
-                                                placeholder="e.g., Technology"
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                disabled={isUploading}
-                                            />
-                                        </div>
+                                        ))}
                                     </div>
-                                )}
-
-                                {selectedFile && !isUploading && (
-                                    <div className="flex space-x-3">
-                                        <Button
-                                            onClick={handleUpload}
-                                            disabled={processing}
-                                            className="flex-1"
-                                        >
-                                            <Zap className="h-4 w-4 mr-2" />
-                                            Analyze Resume
+                                ) : (
+                                    <div className="bg-white dark:bg-gray-800 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 p-8 text-center">
+                                        <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                                        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                                            No resumes yet
+                                        </h3>
+                                        <p className="text-gray-600 dark:text-gray-400 mb-4">
+                                            Upload your first resume to get started with AI-powered analysis.
+                                        </p>
+                                        <Button asChild>
+                                            <Link href="/resumes/upload">
+                                                <Plus className="h-4 w-4 mr-2" />
+                                                Upload Resume
+                                            </Link>
                                         </Button>
                                     </div>
                                 )}
                             </div>
-                        </div>
-                    </div>
 
-                    {/* Features Highlight */}
-                    <div className="space-y-6">
-                        <div className="bg-white rounded-lg border p-6">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                                AI-Powered Analysis
-                            </h3>
-                            <div className="space-y-3">
-                                <div className="flex items-start space-x-3">
-                                    <Target className="h-5 w-5 text-blue-500 mt-0.5" />
-                                    <div>
-                                        <p className="text-sm font-medium text-gray-900">ATS Optimization</p>
-                                        <p className="text-xs text-gray-600">99% accuracy against major ATS systems</p>
-                                    </div>
+                            {/* Quick Actions */}
+                            <div className="bg-white dark:bg-gray-800 rounded-xl p-6">
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                                    Quick Actions
+                                </h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                    <Button variant="outline" className="flex flex-col items-center p-6 h-auto" asChild>
+                                        <Link href="/resumes/upload">
+                                            <Upload className="h-6 w-6 mb-2" />
+                                            <span>Upload Resume</span>
+                                        </Link>
+                                    </Button>
+                                    <Button variant="outline" className="flex flex-col items-center p-6 h-auto" asChild>
+                                        <Link href="/analytics">
+                                            <BarChart3 className="h-6 w-6 mb-2" />
+                                            <span>View Analytics</span>
+                                        </Link>
+                                    </Button>
+                                    <Button variant="outline" className="flex flex-col items-center p-6 h-auto" asChild>
+                                        <Link href="/subscription/upgrade">
+                                            <Crown className="h-6 w-6 mb-2" />
+                                            <span>Upgrade Plan</span>
+                                        </Link>
+                                    </Button>
                                 </div>
-                                <div className="flex items-start space-x-3">
-                                    <Award className="h-5 w-5 text-green-500 mt-0.5" />
-                                    <div>
-                                        <p className="text-sm font-medium text-gray-900">Content Analysis</p>
-                                        <p className="text-xs text-gray-600">Professional writing standards check</p>
+                            </div>
+                        </div>
+
+                        {/* Sidebar */}
+                        <div className="space-y-6">
+                            {/* Subscription Card */}
+                            <SubscriptionCard subscription={subscription} />
+
+                            {/* Activity Feed */}
+                            <ActivityFeed activities={recent_activity || []} />
+
+                            {/* AI Features Highlight */}
+                            <div className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900/20 dark:to-slate-800/20 rounded-xl p-6 border border-slate-200 dark:border-slate-800">
+                                <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4">
+                                    AI-Powered Features
+                                </h3>
+                                <div className="space-y-3">
+                                    <div className="flex items-start space-x-3">
+                                        <Target className="h-5 w-5 text-slate-600 dark:text-slate-400 mt-0.5" />
+                                        <div>
+                                            <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                                                ATS Optimization
+                                            </p>
+                                            <p className="text-xs text-slate-600 dark:text-slate-300">
+                                                99% compatibility with major ATS systems
+                                            </p>
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="flex items-start space-x-3">
-                                    <BarChart3 className="h-5 w-5 text-purple-500 mt-0.5" />
-                                    <div>
-                                        <p className="text-sm font-medium text-gray-900">Skills Assessment</p>
-                                        <p className="text-xs text-gray-600">Market demand analysis</p>
+                                    <div className="flex items-start space-x-3">
+                                        <Award className="h-5 w-5 text-slate-600 dark:text-slate-400 mt-0.5" />
+                                        <div>
+                                            <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                                                Content Analysis
+                                            </p>
+                                            <p className="text-xs text-slate-600 dark:text-slate-300">
+                                                Professional writing standards
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-start space-x-3">
+                                        <BarChart3 className="h-5 w-5 text-slate-600 dark:text-slate-400 mt-0.5" />
+                                        <div>
+                                            <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                                                Skills Assessment
+                                            </p>
+                                            <p className="text-xs text-slate-600 dark:text-slate-300">
+                                                Market demand analysis
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-
-                {/* Recent Resumes */}
-                {recent_resumes.length > 0 && (
-                    <div className="bg-white rounded-lg border">
-                        <div className="p-6 border-b">
-                            <h2 className="text-lg font-semibold text-gray-900">Recent Resumes</h2>
-                        </div>
-                        <div className="divide-y">
-                            {recent_resumes.map((resume) => (
-                                <div key={resume.id} className="p-6 hover:bg-gray-50 transition-colors">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center space-x-3">
-                                            <FileText className="h-5 w-5 text-gray-400" />
-                                            <div>
-                                                <p className="text-sm font-medium text-gray-900">
-                                                    {resume.original_filename}
-                                                </p>
-                                                <p className="text-xs text-gray-500">
-                                                    Uploaded {formatDate(resume.created_at)}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center space-x-4">
-                                            {resume.latest_analysis && (
-                                                <div className="text-right">
-                                                    <p className={cn('text-sm font-medium', getScoreColor(resume.latest_analysis.overall_score))}>
-                                                        {getScoreGrade(resume.latest_analysis.overall_score)} ({resume.latest_analysis.overall_score}/100)
-                                                    </p>
-                                                    <p className="text-xs text-gray-500">Score</p>
-                                                </div>
-                                            )}
-                                            <div className="flex items-center space-x-2">
-                                                {getStatusIcon(resume.analysis_status)}
-                                                <span className="text-sm text-gray-600">
-                                                    {getStatusText(resume.analysis_status)}
-                                                </span>
-                                            </div>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => router.visit(`/resumes/${resume.id}`)}
-                                            >
-                                                View
-                                            </Button>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
+                </main>
             </div>
-        </AppLayout>
+        </>
     );
 }
