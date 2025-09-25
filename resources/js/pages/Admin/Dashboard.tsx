@@ -81,8 +81,8 @@ const StatCard = ({ title, value, description, icon, trend, trendValue }: {
     <Card className="p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
         <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-                <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                    <div className="text-green-600 dark:text-green-400">
+                <div className="p-3 bg-slate-50 dark:bg-slate-900/20 rounded-lg">
+                    <div className="text-slate-600 dark:text-slate-400">
                         {icon}
                     </div>
                 </div>
@@ -355,31 +355,31 @@ export default function AdminDashboard({
                             System Status
                         </h3>
                         <div className="flex items-center space-x-2">
-                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                            <span className="text-sm text-green-600 dark:text-green-400">All Systems Operational</span>
+                            <div className="w-2 h-2 bg-slate-500 rounded-full"></div>
+                            <span className="text-sm text-slate-600 dark:text-slate-400">All Systems Operational</span>
                         </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                            <div className="text-green-600 dark:text-green-400 mb-2">
+                        <div className="text-center p-4 bg-slate-50 dark:bg-slate-900/20 rounded-lg">
+                            <div className="text-slate-600 dark:text-slate-400 mb-2">
                                 <Activity className="h-6 w-6 mx-auto" />
                             </div>
                             <p className="text-sm font-medium text-gray-900 dark:text-gray-100">API Status</p>
-                            <p className="text-xs text-green-600 dark:text-green-400 mt-1">Online</p>
+                            <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">Online</p>
                         </div>
-                        <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                            <div className="text-green-600 dark:text-green-400 mb-2">
+                        <div className="text-center p-4 bg-slate-50 dark:bg-slate-900/20 rounded-lg">
+                            <div className="text-slate-600 dark:text-slate-400 mb-2">
                                 <FileText className="h-6 w-6 mx-auto" />
                             </div>
                             <p className="text-sm font-medium text-gray-900 dark:text-gray-100">File Processing</p>
-                            <p className="text-xs text-green-600 dark:text-green-400 mt-1">Active</p>
+                            <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">Active</p>
                         </div>
-                        <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                            <div className="text-green-600 dark:text-green-400 mb-2">
+                        <div className="text-center p-4 bg-slate-50 dark:bg-slate-900/20 rounded-lg">
+                            <div className="text-slate-600 dark:text-slate-400 mb-2">
                                 <CreditCard className="h-6 w-6 mx-auto" />
                             </div>
                             <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Billing System</p>
-                            <p className="text-xs text-green-600 dark:text-green-400 mt-1">Operational</p>
+                            <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">Operational</p>
                         </div>
                     </div>
                 </Card>

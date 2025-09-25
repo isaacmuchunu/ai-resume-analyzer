@@ -45,7 +45,7 @@ export function ResumeCard({ resume, onDelete, onReanalyze }: ResumeCardProps) {
     };
 
     const getScoreColor = (score: number) => {
-        if (score >= 80) return 'text-green-600';
+        if (score >= 80) return 'text-slate-600';
         if (score >= 60) return 'text-yellow-600';
         return 'text-red-600';
     };
@@ -56,8 +56,8 @@ export function ResumeCard({ resume, onDelete, onReanalyze }: ResumeCardProps) {
                 <div className="flex items-start justify-between">
                     <div className="flex items-start space-x-3 flex-1 min-w-0">
                         <div className="flex-shrink-0">
-                            <div className="h-10 w-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
-                                <FileText className="h-5 w-5 text-green-600" />
+                            <div className="h-10 w-10 bg-slate-100 dark:bg-slate-900/30 rounded-lg flex items-center justify-center">
+                                <FileText className="h-5 w-5 text-slate-600" />
                             </div>
                         </div>
 

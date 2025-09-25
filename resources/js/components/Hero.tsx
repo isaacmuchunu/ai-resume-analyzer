@@ -4,7 +4,7 @@ import { Upload, Lock } from 'lucide-react'
 import { Link } from '@inertiajs/react'
 export const Hero = () => {
   return (
-    <section className="relative min-h-screen bg-gradient-to-br from-teal-50 via-green-50 to-purple-100 overflow-hidden">
+    <section className="relative min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 overflow-hidden">
       {/* Background decorative elements */}
       <div className="absolute inset-0">
         <img
@@ -32,7 +32,7 @@ export const Hero = () => {
               </p>
             </div>
             {/* File Upload Area */}
-            <div className="bg-white border-2 border-dashed border-teal-300 rounded-lg p-8 text-center space-y-4">
+            <div className="bg-white border-2 border-dashed border-slate-300 rounded-lg p-8 text-center space-y-4">
               <div className="space-y-2">
                 <p className="text-gray-700">
                   Drop your resume here or choose a file.
@@ -42,7 +42,7 @@ export const Hero = () => {
                 </p>
               </div>
               <Link href="/register">
-                <Button className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-md font-medium transition-colors border-0">
+                <Button className="bg-slate-800 hover:bg-slate-900 text-white px-8 py-3 rounded-md font-medium transition-colors border-0">
                   <Upload className="w-5 h-5 mr-2" />
                   Upload Your Resume
                 </Button>

@@ -176,7 +176,7 @@ export default function UsersIndex({ users, filters }: Props) {
                     </Card>
                     <Card className="p-4">
                         <div className="flex items-center">
-                            <User className="h-8 w-8 text-green-500" />
+                            <User className="h-8 w-8 text-slate-500" />
                             <div className="ml-3">
                                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Regular Users</p>
                                 <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
@@ -348,8 +348,8 @@ export default function UsersIndex({ users, filters }: Props) {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center">
-                                                <div className="w-10 h-10 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
-                                                    <span className="text-sm font-semibold text-green-600 dark:text-green-400">
+                                                <div className="w-10 h-10 bg-slate-100 dark:bg-slate-900 rounded-full flex items-center justify-center">
+                                                    <span className="text-sm font-semibold text-slate-600 dark:text-slate-400">
                                                         {user.full_name.split(' ').map(n => n[0]).join('').toUpperCase()}
                                                     </span>
                                                 </div>

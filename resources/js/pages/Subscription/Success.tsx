@@ -16,7 +16,7 @@ export default function SubscriptionSuccess({ sessionId, message }: SuccessProps
             <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
                 <Card className="max-w-md w-full p-8 text-center">
                     <div className="mb-6">
-                        <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
+                        <CheckCircle className="h-16 w-16 text-slate-500 mx-auto mb-4" />
                         <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                             Subscription Activated!
                         </h1>
@@ -25,14 +25,14 @@ export default function SubscriptionSuccess({ sessionId, message }: SuccessProps
                         </p>
                     </div>
 
-                    <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 mb-6">
+                    <div className="bg-slate-50 dark:bg-slate-900/20 border border-slate-200 dark:border-slate-800 rounded-lg p-4 mb-6">
                         <div className="flex items-center justify-center mb-2">
-                            <Crown className="h-5 w-5 text-green-600 dark:text-green-400 mr-2" />
-                            <span className="font-medium text-green-800 dark:text-green-200">
+                            <Crown className="h-5 w-5 text-slate-600 dark:text-slate-400 mr-2" />
+                            <span className="font-medium text-slate-800 dark:text-slate-200">
                                 Welcome to Premium!
                             </span>
                         </div>
-                        <p className="text-sm text-green-700 dark:text-green-300">
+                        <p className="text-sm text-slate-700 dark:text-slate-300">
                             You now have access to all premium features including unlimited resume analysis,
                             advanced AI insights, collaboration tools, and priority support.
                         </p>

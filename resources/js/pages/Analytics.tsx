@@ -67,7 +67,7 @@ export default function Analytics({ analytics }: AnalyticsProps) {
     const getTrendIcon = (trend: 'up' | 'down' | 'neutral') => {
         switch (trend) {
             case 'up':
-                return <TrendingUp className="h-4 w-4 text-green-500" />;
+                return <TrendingUp className="h-4 w-4 text-slate-500" />;
             case 'down':
                 return <TrendingDown className="h-4 w-4 text-red-500" />;
             default:
@@ -76,13 +76,13 @@ export default function Analytics({ analytics }: AnalyticsProps) {
     };
 
     const getScoreColor = (score: number) => {
-        if (score >= 80) return 'text-green-600';
+        if (score >= 80) return 'text-slate-600';
         if (score >= 60) return 'text-yellow-600';
         return 'text-red-600';
     };
 
     const getScoreBackground = (score: number) => {
-        if (score >= 80) return 'bg-green-100 dark:bg-green-900/20';
+        if (score >= 80) return 'bg-slate-100 dark:bg-slate-900/20';
         if (score >= 60) return 'bg-yellow-100 dark:bg-yellow-900/20';
         return 'bg-red-100 dark:bg-red-900/20';
     };

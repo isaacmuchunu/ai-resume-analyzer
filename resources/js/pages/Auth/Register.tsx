@@ -36,22 +36,22 @@ export default function Register() {
     };
 
     const passwordStrength = getPasswordStrength(data.password);
-    const strengthColors = ['bg-red-500', 'bg-red-400', 'bg-yellow-400', 'bg-green-400', 'bg-green-500'];
+    const strengthColors = ['bg-red-500', 'bg-red-400', 'bg-yellow-400', 'bg-slate-400', 'bg-slate-500'];
     const strengthLabels = ['Very Weak', 'Weak', 'Fair', 'Good', 'Strong'];
 
     return (
         <>
             <Head title="Create Account" />
 
-            <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 dark:from-gray-950 dark:to-green-950/20 flex items-center justify-center p-4">
+            <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-100 dark:from-gray-950 dark:to-blue-950/20 flex items-center justify-center p-4">
                 <div className="w-full max-w-md">
                     {/* Logo */}
                     <div className="flex items-center justify-center mb-8">
                         <div className="flex items-center space-x-3">
-                            <div className="h-12 w-12 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center">
+                            <div className="h-12 w-12 bg-gradient-to-br from-slate-600 to-slate-700 rounded-full flex items-center justify-center">
                                 <FileText className="h-7 w-7 text-white" />
                             </div>
-                            <span className="text-2xl font-bold bg-gradient-to-r from-green-600 to-green-700 bg-clip-text text-transparent">
+                            <span className="text-2xl font-bold bg-gradient-to-r from-slate-700 to-slate-800 bg-clip-text text-transparent">
                                 AI Resume Analyzer
                             </span>
                         </div>
@@ -210,16 +210,16 @@ export default function Register() {
                                         type="checkbox"
                                         checked={data.terms}
                                         onChange={(e) => setData('terms', e.target.checked)}
-                                        className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded mt-0.5"
+                                        className="h-4 w-4 text-slate-600 focus:ring-slate-500 border-gray-300 rounded mt-0.5"
                                         required
                                     />
                                     <Label htmlFor="terms" className="text-sm leading-5">
                                         I agree to the{' '}
-                                        <Link href="/terms" className="text-green-600 hover:text-green-700 hover:underline">
+                                        <Link href="/terms" className="text-slate-600 hover:text-slate-700 hover:underline">
                                             Terms of Service
                                         </Link>{' '}
                                         and{' '}
-                                        <Link href="/privacy" className="text-green-600 hover:text-green-700 hover:underline">
+                                        <Link href="/privacy" className="text-slate-600 hover:text-slate-700 hover:underline">
                                             Privacy Policy
                                         </Link>
                                     </Label>
@@ -231,7 +231,7 @@ export default function Register() {
                                 <Button
                                     type="submit"
                                     disabled={processing}
-                                    className="w-full h-11 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-medium"
+                                    className="w-full h-11 bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white font-medium"
                                 >
                                     {processing ? 'Creating account...' : 'Create account'}
                                 </Button>
@@ -296,7 +296,7 @@ export default function Register() {
                                 Already have an account?{' '}
                                 <Link
                                     href="/login"
-                                    className="font-medium text-green-600 hover:text-green-700 hover:underline"
+                                    className="font-medium text-slate-600 hover:text-slate-700 hover:underline"
                                 >
                                     Sign in
                                 </Link>

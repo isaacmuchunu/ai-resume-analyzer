@@ -46,15 +46,15 @@ export default function Offline() {
 
                         <ul className="space-y-3">
                             <li className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                                <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
+                                <div className="w-2 h-2 bg-slate-500 rounded-full mr-3"></div>
                                 View previously loaded resumes
                             </li>
                             <li className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                                <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
+                                <div className="w-2 h-2 bg-slate-500 rounded-full mr-3"></div>
                                 Read cached analysis results
                             </li>
                             <li className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                                <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
+                                <div className="w-2 h-2 bg-slate-500 rounded-full mr-3"></div>
                                 Access settings and preferences
                             </li>
                             <li className="flex items-center text-sm text-gray-500 dark:text-gray-500">

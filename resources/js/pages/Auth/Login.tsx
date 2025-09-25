@@ -25,15 +25,15 @@ export default function Login() {
         <>
             <Head title="Sign In" />
 
-            <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 dark:from-gray-950 dark:to-green-950/20 flex items-center justify-center p-4">
+            <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-100 dark:from-gray-950 dark:to-blue-950/20 flex items-center justify-center p-4">
                 <div className="w-full max-w-md">
                     {/* Logo */}
                     <div className="flex items-center justify-center mb-8">
                         <div className="flex items-center space-x-3">
-                            <div className="h-12 w-12 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center">
+                            <div className="h-12 w-12 bg-gradient-to-br from-slate-600 to-slate-700 rounded-full flex items-center justify-center">
                                 <FileText className="h-7 w-7 text-white" />
                             </div>
-                            <span className="text-2xl font-bold bg-gradient-to-r from-green-600 to-green-700 bg-clip-text text-transparent">
+                            <span className="text-2xl font-bold bg-gradient-to-r from-slate-700 to-slate-800 bg-clip-text text-transparent">
                                 AI Resume Analyzer
                             </span>
                         </div>
@@ -100,7 +100,7 @@ export default function Login() {
                                             type="checkbox"
                                             checked={data.remember}
                                             onChange={(e) => setData('remember', e.target.checked)}
-                                            className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                                            className="h-4 w-4 text-slate-600 focus:ring-slate-500 border-gray-300 rounded"
                                         />
                                         <Label htmlFor="remember" className="text-sm">
                                             Remember me
@@ -108,7 +108,7 @@ export default function Login() {
                                     </div>
                                     <Link
                                         href="/forgot-password"
-                                        className="text-sm text-green-600 hover:text-green-700 hover:underline"
+                                        className="text-sm text-slate-600 hover:text-slate-700 hover:underline"
                                     >
                                         Forgot password?
                                     </Link>
@@ -117,7 +117,7 @@ export default function Login() {
                                 <Button
                                     type="submit"
                                     disabled={processing}
-                                    className="w-full h-11 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-medium"
+                                    className="w-full h-11 bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white font-medium"
                                 >
                                     {processing ? 'Signing in...' : 'Sign in'}
                                 </Button>
@@ -182,7 +182,7 @@ export default function Login() {
                                 Don't have an account?{' '}
                                 <Link
                                     href="/register"
-                                    className="font-medium text-green-600 hover:text-green-700 hover:underline"
+                                    className="font-medium text-slate-600 hover:text-slate-700 hover:underline"
                                 >
                                     Sign up
                                 </Link>

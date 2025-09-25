@@ -97,7 +97,7 @@ export default function Index({ notifications, unread_count }: Props) {
     const getNotificationColor = (type: string) => {
         switch (type) {
             case 'analysis_complete':
-                return 'bg-green-100 text-green-800';
+                return 'bg-slate-100 text-slate-800';
             case 'subscription_expiring':
                 return 'bg-yellow-100 text-yellow-800';
             case 'subscription_expired':

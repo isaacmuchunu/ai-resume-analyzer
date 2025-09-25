@@ -26,11 +26,11 @@ export default function AdminLogin({ status }: { status?: string }) {
         <>
             <Head title="Admin Login" />
 
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-green-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-green-950/30 p-4">
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-slate-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-slate-950/30 p-4">
                 <div className="w-full max-w-md">
                     {/* Header */}
                     <div className="text-center mb-8">
-                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-green-500 to-green-600 mb-6 shadow-lg">
+                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-slate-600 to-slate-700 mb-6 shadow-lg">
                             <Shield className="h-8 w-8 text-white" />
                         </div>
                         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
@@ -43,7 +43,7 @@ export default function AdminLogin({ status }: { status?: string }) {
 
                     <Card className="p-8 shadow-2xl border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
                         {status && (
-                            <div className="mb-4 text-sm font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 p-3 rounded-lg border border-green-200 dark:border-green-800">
+                            <div className="mb-4 text-sm font-medium text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/20 p-3 rounded-lg border border-slate-200 dark:border-slate-800">
                                 {status}
                             </div>
                         )}

@@ -181,7 +181,7 @@ export default function SubscriptionIndex({ subscription, available_plans, usage
 
     const getStatusBadge = (status: string) => {
         const statusConfig = {
-            active: { color: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400', label: 'Active' },
+            active: { color: 'bg-slate-100 text-slate-800 dark:bg-slate-900/20 dark:text-slate-400', label: 'Active' },
             cancelled: { color: 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400', label: 'Cancelled' },
             expired: { color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300', label: 'Expired' },
             suspended: { color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400', label: 'Suspended' },
@@ -378,7 +378,7 @@ export default function SubscriptionIndex({ subscription, available_plans, usage
                                     plan.popular
                                         ? 'border-2 border-slate-500 shadow-xl'
                                         : isCurrent
-                                        ? 'border-2 border-green-500 shadow-lg'
+                                        ? 'border-2 border-slate-500 shadow-lg'
                                         : 'border border-gray-200 dark:border-gray-700'
                                 }`}
                             >
@@ -392,7 +392,7 @@ export default function SubscriptionIndex({ subscription, available_plans, usage
 
                                 {isCurrent && (
                                     <div className="absolute top-4 right-4">
-                                        <span className="bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400 px-2 py-1 rounded-full text-xs font-medium">
+                                        <span className="bg-slate-100 text-slate-800 dark:bg-slate-900/20 dark:text-slate-400 px-2 py-1 rounded-full text-xs font-medium">
                                             Current Plan
                                         </span>
                                     </div>
@@ -426,7 +426,7 @@ export default function SubscriptionIndex({ subscription, available_plans, usage
                                 <ul className="space-y-3 mb-8">
                                     {plan.features.map((feature, index) => (
                                         <li key={index} className="flex items-start">
-                                            <Check className="h-5 w-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
+                                            <Check className="h-5 w-5 text-slate-500 mr-3 mt-0.5 flex-shrink-0" />
                                             <span className="text-sm text-gray-700 dark:text-gray-300">
                                                 {feature}
                                             </span>
@@ -439,7 +439,7 @@ export default function SubscriptionIndex({ subscription, available_plans, usage
                                     disabled={isCurrent || isProcessingCheckout}
                                     className={`w-full ${
                                         isCurrent
-                                            ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400 cursor-not-allowed'
+                                            ? 'bg-slate-100 text-slate-800 dark:bg-slate-900/20 dark:text-slate-400 cursor-not-allowed'
                                             : plan.popular
                                             ? 'bg-slate-700 hover:bg-slate-800 text-white'
                                             : 'bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-white dark:border-gray-600'
@@ -501,7 +501,7 @@ export default function SubscriptionIndex({ subscription, available_plans, usage
                                             {plans.map(([planId, plan]) => (
                                                 <td key={planId} className="text-center py-4 px-4">
                                                     {feature[planId as keyof typeof feature] ? (
-                                                        <Check className="h-5 w-5 text-green-500 mx-auto" />
+                                                        <Check className="h-5 w-5 text-slate-500 mx-auto" />
                                                     ) : (
                                                         <X className="h-5 w-5 text-gray-300 mx-auto" />
                                                     )}

@@ -20,7 +20,7 @@ export function formatScore(score: number): string {
 }
 
 export function getScoreColor(score: number): string {
-    if (score >= 80) return 'text-green-600';
+    if (score >= 80) return 'text-slate-600';
     if (score >= 60) return 'text-yellow-600';
     return 'text-red-600';
 }

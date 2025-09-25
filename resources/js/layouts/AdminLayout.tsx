@@ -64,7 +64,7 @@ export default function AdminLayout({ children }: PropsWithChildren) {
                 <div className="fixed inset-y-0 left-0 w-64 bg-white dark:bg-gray-800 shadow-xl">
                     <div className="flex h-16 items-center justify-between px-6 border-b border-gray-200 dark:border-gray-700">
                         <div className="flex items-center space-x-3">
-                            <Shield className="h-8 w-8 text-green-600" />
+                            <Shield className="h-8 w-8 text-slate-600" />
                             <span className="text-xl font-bold text-gray-900 dark:text-gray-100">
                                 Admin
                             </span>
@@ -87,7 +87,7 @@ export default function AdminLayout({ children }: PropsWithChildren) {
                                     href={item.href === '#' ? '#' : route(item.href)}
                                     className={`group flex items-center px-3 py-2 text-sm font-medium rounded-lg mb-1 transition-colors ${
                                         isCurrent
-                                            ? 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300'
+                                            ? 'bg-slate-100 dark:bg-slate-900/20 text-slate-700 dark:text-slate-300'
                                             : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                                     }`}
                                 >
@@ -105,7 +105,7 @@ export default function AdminLayout({ children }: PropsWithChildren) {
                 <div className="flex flex-col flex-grow bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
                     <div className="flex h-16 items-center px-6 border-b border-gray-200 dark:border-gray-700">
                         <div className="flex items-center space-x-3">
-                            <Shield className="h-8 w-8 text-green-600" />
+                            <Shield className="h-8 w-8 text-slate-600" />
                             <span className="text-xl font-bold text-gray-900 dark:text-gray-100">
                                 Admin Panel
                             </span>
@@ -120,7 +120,7 @@ export default function AdminLayout({ children }: PropsWithChildren) {
                                     href={item.href === '#' ? '#' : route(item.href)}
                                     className={`group flex items-center px-3 py-2 text-sm font-medium rounded-lg mb-1 transition-colors ${
                                         isCurrent
-                                            ? 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300'
+                                            ? 'bg-slate-100 dark:bg-slate-900/20 text-slate-700 dark:text-slate-300'
                                             : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                                     }`}
                                 >
@@ -172,7 +172,7 @@ export default function AdminLayout({ children }: PropsWithChildren) {
                                     <input
                                         type="text"
                                         placeholder="Search..."
-                                        className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                        className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-sm focus:ring-2 focus:ring-slate-500 focus:border-transparent"
                                     />
                                 </div>
                             </div>
@@ -192,8 +192,8 @@ export default function AdminLayout({ children }: PropsWithChildren) {
                                     className="flex items-center space-x-2 p-2"
                                     onClick={() => setUserMenuOpen(!userMenuOpen)}
                                 >
-                                    <div className="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
-                                        <span className="text-sm font-semibold text-green-600 dark:text-green-400">
+                                    <div className="w-8 h-8 bg-slate-100 dark:bg-slate-900 rounded-full flex items-center justify-center">
+                                        <span className="text-sm font-semibold text-slate-600 dark:text-slate-400">
                                             {auth.user.initials || 'SA'}
                                         </span>
                                     </div>
