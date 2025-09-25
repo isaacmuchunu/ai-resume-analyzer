@@ -11,9 +11,6 @@ Route::get('/', function () {
     return Inertia::render('Welcome');
 })->name('welcome');
 
-// Webhooks (no authentication required)
-Route::post('/webhooks/stripe', [\App\Http\Controllers\WebhookController::class, 'stripe'])->name('webhooks.stripe');
-
 // For development/demo purposes, allow direct access without strict tenant requirements
 Route::middleware(['web'])->group(function () {
 

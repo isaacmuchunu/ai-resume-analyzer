@@ -87,9 +87,3 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::post('/analyze-text', [AnalysisApiController::class, 'analyzeText'])->name('analyze.text');
     });
 });
-
-// Webhook endpoints (special handling)
-Route::prefix('webhooks')->name('api.webhooks.')->group(function () {
-    Route::post('/stripe', [WebhookController::class, 'stripe'])->name('stripe');
-    Route::post('/anthropic', [WebhookController::class, 'anthropic'])->name('anthropic');
-});

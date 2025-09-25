@@ -10,13 +10,11 @@ use Exception;
 
 class PaymentService
 {
-    private string $stripeSecretKey;
-    private string $webhookSecret;
+    private ?string $stripeSecretKey;
 
     public function __construct(private NotificationService $notificationService)
     {
         $this->stripeSecretKey = config('services.stripe.secret');
-        $this->webhookSecret = config('services.stripe.webhook_secret');
 
         if ($this->stripeSecretKey) {
             \Stripe\Stripe::setApiKey($this->stripeSecretKey);
@@ -173,49 +171,36 @@ class PaymentService
     }
 
     /**
-     * Handle Stripe webhooks
+     * Manual subscription status check (replaces webhook functionality)
      */
-    public function handleWebhook(array $payload, string $signature): array
+    public function syncSubscriptionStatus(User $user): array
     {
         try {
-            // Verify webhook signature
-            $event = \Stripe\Webhook::constructEvent(
-                json_encode($payload),
-                $signature,
-                $this->webhookSecret
-            );
-
-            Log::info('Stripe webhook received', [
-                'type' => $event->type,
-                'id' => $event->id,
-            ]);
-
-            // Handle different event types
-            switch ($event->type) {
-                case 'checkout.session.completed':
-                    return $this->handleCheckoutCompleted($event->data->object);
-
-                case 'invoice.payment_succeeded':
-                    return $this->handlePaymentSucceeded($event->data->object);
-
-                case 'invoice.payment_failed':
-                    return $this->handlePaymentFailed($event->data->object);
-
-                case 'customer.subscription.updated':
-                    return $this->handleSubscriptionUpdated($event->data->object);
-
-                case 'customer.subscription.deleted':
-                    return $this->handleSubscriptionDeleted($event->data->object);
-
-                default:
-                    Log::info('Unhandled webhook event', ['type' => $event->type]);
-                    return ['success' => true, 'message' => 'Event not handled'];
+            $subscription = $user->activeSubscription;
+            if (!$subscription || !$subscription->stripe_subscription_id) {
+                return ['success' => false, 'error' => 'No subscription found'];
             }
 
+            // Retrieve latest subscription data from Stripe
+            $stripeSubscription = \Stripe\Subscription::retrieve($subscription->stripe_subscription_id);
+            
+            // Update local subscription record
+            $subscription->update([
+                'status' => $stripeSubscription->status,
+                'current_period_start' => now()->createFromTimestamp($stripeSubscription->current_period_start),
+                'current_period_end' => now()->createFromTimestamp($stripeSubscription->current_period_end),
+            ]);
+
+            return [
+                'success' => true,
+                'status' => $stripeSubscription->status,
+                'updated' => true
+            ];
+
         } catch (Exception $e) {
-            Log::error('Webhook handling failed', [
+            Log::error('Subscription sync failed', [
+                'user_id' => $user->id,
                 'error' => $e->getMessage(),
-                'payload' => $payload,
             ]);
 
             return [
@@ -378,130 +363,6 @@ class PaymentService
     {
         $plans = $this->getAvailablePlans();
         return $plans[$planId] ?? null;
-    }
-
-    private function handleCheckoutCompleted($session): array
-    {
-        $userId = $session->metadata->user_id ?? null;
-        if (!$userId) {
-            throw new Exception('User ID not found in session metadata');
-        }
-
-        $user = User::find($userId);
-        if (!$user) {
-            throw new Exception('User not found');
-        }
-
-        // Retrieve the subscription from Stripe
-        $stripeSubscription = \Stripe\Subscription::retrieve($session->subscription);
-
-        // Create or update subscription record
-        UserSubscription::updateOrCreate(
-            ['user_id' => $user->id],
-            [
-                'stripe_customer_id' => $session->customer,
-                'stripe_subscription_id' => $stripeSubscription->id,
-                'plan' => $session->metadata->plan_id,
-                'status' => 'active',
-                'current_period_start' => now()->createFromTimestamp($stripeSubscription->current_period_start),
-                'current_period_end' => now()->createFromTimestamp($stripeSubscription->current_period_end),
-                'trial_ends_at' => $stripeSubscription->trial_end ?
-                    now()->createFromTimestamp($stripeSubscription->trial_end) : null,
-            ]
-        );
-
-        // Send welcome email
-        $this->notificationService->sendToUser(
-            $user,
-            'subscription_activated',
-            'Welcome to ' . ($session->metadata->plan_id ?? 'Premium'),
-            'Your subscription has been activated successfully!',
-            ['plan' => $session->metadata->plan_id]
-        );
-
-        return ['success' => true, 'message' => 'Subscription activated'];
-    }
-
-    private function handlePaymentSucceeded($invoice): array
-    {
-        // Handle successful recurring payment
-        $customerId = $invoice->customer;
-        $subscription = UserSubscription::where('stripe_customer_id', $customerId)->first();
-
-        if ($subscription) {
-            $subscription->update([
-                'status' => 'active',
-                'last_payment_date' => now(),
-            ]);
-
-            $this->notificationService->sendToUser(
-                $subscription->user,
-                'payment_succeeded',
-                'Payment Successful',
-                'Your subscription payment was processed successfully.',
-                ['amount' => $invoice->amount_paid / 100]
-            );
-        }
-
-        return ['success' => true];
-    }
-
-    private function handlePaymentFailed($invoice): array
-    {
-        $customerId = $invoice->customer;
-        $subscription = UserSubscription::where('stripe_customer_id', $customerId)->first();
-
-        if ($subscription) {
-            $subscription->update(['status' => 'past_due']);
-
-            $this->notificationService->sendToUser(
-                $subscription->user,
-                'payment_failed',
-                'Payment Failed',
-                'We were unable to process your subscription payment. Please update your payment method.',
-                ['amount' => $invoice->amount_due / 100]
-            );
-        }
-
-        return ['success' => true];
-    }
-
-    private function handleSubscriptionUpdated($subscription): array
-    {
-        $userSubscription = UserSubscription::where('stripe_subscription_id', $subscription->id)->first();
-
-        if ($userSubscription) {
-            $userSubscription->update([
-                'status' => $subscription->status,
-                'current_period_start' => now()->createFromTimestamp($subscription->current_period_start),
-                'current_period_end' => now()->createFromTimestamp($subscription->current_period_end),
-            ]);
-        }
-
-        return ['success' => true];
-    }
-
-    private function handleSubscriptionDeleted($subscription): array
-    {
-        $userSubscription = UserSubscription::where('stripe_subscription_id', $subscription->id)->first();
-
-        if ($userSubscription) {
-            $userSubscription->update([
-                'status' => 'cancelled',
-                'period_ends_at' => now(),
-                'cancelled_at' => now(),
-            ]);
-
-            $this->notificationService->sendToUser(
-                $userSubscription->user,
-                'subscription_cancelled',
-                'Subscription Cancelled',
-                'Your subscription has been cancelled.',
-                ['ended_at' => now()->toISOString()]
-            );
-        }
-
-        return ['success' => true];
     }
 
     private function getExportCount(User $user, $startDate, $endDate): int

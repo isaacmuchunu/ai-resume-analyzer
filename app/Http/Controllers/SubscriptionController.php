@@ -91,6 +91,49 @@ class SubscriptionController extends Controller
     public function success(Request $request)
     {
         $sessionId = $request->query('session_id');
+        $user = Auth::user();
+
+        // Manually sync subscription status since we don't use webhooks
+        if ($sessionId) {
+            try {
+                // Retrieve the checkout session from Stripe
+                $session = \Stripe\Checkout\Session::retrieve($sessionId);
+                
+                if ($session && $session->subscription) {
+                    // Get the subscription from Stripe
+                    $stripeSubscription = \Stripe\Subscription::retrieve($session->subscription);
+                    
+                    // Update or create local subscription record
+                    UserSubscription::updateOrCreate(
+                        ['user_id' => $user->id],
+                        [
+                            'stripe_customer_id' => $session->customer,
+                            'stripe_subscription_id' => $stripeSubscription->id,
+                            'plan' => $session->metadata->plan_id ?? 'professional',
+                            'status' => 'active',
+                            'current_period_start' => now()->createFromTimestamp($stripeSubscription->current_period_start),
+                            'current_period_end' => now()->createFromTimestamp($stripeSubscription->current_period_end),
+                            'trial_ends_at' => $stripeSubscription->trial_end ?
+                                now()->createFromTimestamp($stripeSubscription->trial_end) : null,
+                        ]
+                    );
+                    
+                    // Log successful subscription activation
+                    ActivityLog::logForUser($user, 'Subscription activated via checkout', null, [
+                        'session_id' => $sessionId,
+                        'plan' => $session->metadata->plan_id ?? 'professional',
+                        'timestamp' => now(),
+                    ]);
+                }
+            } catch (Exception $e) {
+                // Log error but don't fail the success page
+                \Illuminate\Support\Facades\Log::error('Failed to sync subscription after checkout', [
+                    'user_id' => $user->id,
+                    'session_id' => $sessionId,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
 
         return Inertia::render('Subscription/Success', [
             'sessionId' => $sessionId,
