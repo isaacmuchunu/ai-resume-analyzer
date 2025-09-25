@@ -74,9 +74,17 @@ class Tenant extends BaseTenant
     {
         $connectionName = $this->getConnectionName() ?? config('database.default');
 
-        config([
-            "database.connections.{$connectionName}.database" => $this->getDatabaseName(),
-        ]);
+        // For SQLite, use table prefix instead of separate databases
+        if (config("database.connections.{$connectionName}.driver") === 'sqlite') {
+            $prefix = "tenant_{$this->id}_";
+            config([
+                "database.connections.{$connectionName}.prefix" => $prefix,
+            ]);
+        } else {
+            config([
+                "database.connections.{$connectionName}.database" => $this->getDatabaseName(),
+            ]);
+        }
 
         \DB::purge($connectionName);
         \DB::reconnect($connectionName);

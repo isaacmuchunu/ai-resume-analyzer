@@ -16,9 +16,11 @@ class SwitchTenantDatabaseTask implements SwitchTenantTask
     {
         $defaultConnectionName = config('database.default');
         $originalDatabaseName = config("database.connections.{$defaultConnectionName}.database");
+        $originalPrefix = config("database.connections.{$defaultConnectionName}.prefix");
 
         config([
             "database.connections.{$defaultConnectionName}.database" => $originalDatabaseName,
+            "database.connections.{$defaultConnectionName}.prefix" => $originalPrefix,
         ]);
 
         \DB::purge($defaultConnectionName);

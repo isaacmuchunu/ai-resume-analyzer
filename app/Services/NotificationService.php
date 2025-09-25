@@ -3,128 +3,184 @@
 namespace App\Services;
 
 use App\Models\User;
-use App\Models\Notification;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
-use Exception;
 
 class NotificationService
 {
-    public function sendToUser(User $user, string $type, string $title, string $message, array $data = []): bool
-    {
+    public function sendToUser(
+        User $user,
+        string $type,
+        string $title,
+        string $message,
+        array $data = []
+    ): bool {
         try {
-            // Check user preferences
-            $preferences = $user->preferences['notifications'] ?? [];
-
-            // Create database notification
-            $notification = $user->notifications()->create([
-                'type' => $type,
-                'data' => array_merge($data, [
-                    'title' => $title,
-                    'message' => $message,
-                    'user_id' => $user->id,
-                    'user_email' => $user->email,
-                ]),
-            ]);
-
-            // Send email if enabled
-            if ($this->shouldSendEmail($user, $type)) {
-                $this->sendEmailNotification($user, $title, $message, $data);
-            }
-
             // Log the notification
-            Log::info("Notification sent to user {$user->id}: {$type}", [
+            Log::info('Sending notification', [
                 'user_id' => $user->id,
                 'type' => $type,
                 'title' => $title,
             ]);
 
+            // Send email notification
+            $this->sendEmailNotification($user, $type, $title, $message, $data);
+
+            // Store in database for in-app notifications
+            $this->storeNotification($user, $type, $title, $message, $data);
+
             return true;
 
-        } catch (Exception $e) {
-            Log::error("Failed to send notification to user {$user->id}: {$e->getMessage()}", [
+        } catch (\Exception $e) {
+            Log::error('Failed to send notification', [
                 'user_id' => $user->id,
                 'type' => $type,
-                'exception' => $e,
+                'error' => $e->getMessage(),
             ]);
 
             return false;
         }
     }
 
-    public function sendAnalysisComplete(User $user, $resume, $analysisResult): bool
+    public function sendAnalysisCompleted(User $user, $resume, $analysis): bool
     {
-        $title = 'Resume Analysis Complete';
-        $message = "Your resume '{$resume->original_filename}' has been analyzed successfully.";
+        $title = "Resume Analysis Complete";
+        $message = "Your resume '{$resume->original_filename}' has been analyzed. Overall score: {$analysis->overall_score}/100";
 
-        return $this->sendToUser($user, 'analysis_complete', $title, $message, [
+        return $this->sendToUser($user, 'analysis_completed', $title, $message, [
             'resume_id' => $resume->id,
-            'analysis_id' => $analysisResult->id,
-            'score' => $analysisResult->overall_score,
+            'analysis_id' => $analysis->id,
+            'overall_score' => $analysis->overall_score,
         ]);
-    }
-
-    public function sendSubscriptionExpiring(User $user, $subscription, int $daysLeft): bool
-    {
-        $title = 'Subscription Expiring Soon';
-        $message = "Your {$subscription->plan} subscription will expire in {$daysLeft} days.";
-
-        return $this->sendToUser($user, 'subscription_expiring', $title, $message, [
-            'subscription_id' => $subscription->id,
-            'plan' => $subscription->plan,
-            'days_left' => $daysLeft,
-            'expires_at' => $subscription->period_ends_at,
-        ]);
-    }
-
-    public function sendSubscriptionExpired(User $user, $subscription): bool
-    {
-        $title = 'Subscription Expired';
-        $message = "Your {$subscription->plan} subscription has expired. Upgrade to continue using premium features.";
-
-        return $this->sendToUser($user, 'subscription_expired', $title, $message, [
-            'subscription_id' => $subscription->id,
-            'plan' => $subscription->plan,
-            'expired_at' => $subscription->period_ends_at,
-        ]);
-    }
-
-    public function sendWeeklyReport(User $user, array $stats): bool
-    {
-        $title = 'Weekly Resume Analysis Report';
-        $message = "Here's your weekly summary: {$stats['resumes_analyzed']} resumes analyzed, average score: {$stats['average_score']}%";
-
-        return $this->sendToUser($user, 'weekly_report', $title, $message, $stats);
     }
 
     public function sendWelcome(User $user): bool
     {
-        $title = 'Welcome to AI Resume Analyzer!';
-        $message = 'Thank you for joining! Start by uploading your first resume for analysis.';
+        $title = "Welcome to AI Resume Analyzer";
+        $message = "Welcome aboard! Start by uploading your resume for AI-powered analysis.";
 
         return $this->sendToUser($user, 'welcome', $title, $message);
     }
 
-    public function sendPasswordChanged(User $user): bool
+    public function sendPasswordReset(User $user, string $resetUrl): bool
     {
-        $title = 'Password Changed';
-        $message = 'Your password has been successfully changed.';
+        $title = "Password Reset Request";
+        $message = "Click the link to reset your password. This link expires in 1 hour.";
 
-        return $this->sendToUser($user, 'password_changed', $title, $message, [
-            'changed_at' => now(),
-            'ip_address' => request()->ip(),
+        return $this->sendToUser($user, 'password_reset', $title, $message, [
+            'reset_url' => $resetUrl,
         ]);
     }
 
-    public function markAsRead(User $user, string $notificationId): bool
+    public function sendSubscriptionUpdate(User $user, string $status, array $data = []): bool
+    {
+        $title = match($status) {
+            'activated' => 'Subscription Activated',
+            'cancelled' => 'Subscription Cancelled',
+            'renewed' => 'Subscription Renewed',
+            'payment_failed' => 'Payment Failed',
+            default => 'Subscription Update',
+        };
+
+        $message = match($status) {
+            'activated' => 'Your subscription has been activated. Enjoy premium features!',
+            'cancelled' => 'Your subscription has been cancelled. You can reactivate anytime.',
+            'renewed' => 'Your subscription has been renewed successfully.',
+            'payment_failed' => 'We could not process your payment. Please update your payment method.',
+            default => 'Your subscription status has been updated.',
+        };
+
+        return $this->sendToUser($user, 'subscription_' . $status, $title, $message, $data);
+    }
+
+    private function sendEmailNotification(
+        User $user,
+        string $type,
+        string $title,
+        string $message,
+        array $data
+    ): void {
+        // Simple email sending - in production, use proper mail templates
+        try {
+            Mail::raw($message, function ($mail) use ($user, $title) {
+                $mail->to($user->email, $user->full_name)
+                     ->subject($title);
+            });
+        } catch (\Exception $e) {
+            Log::warning('Failed to send email notification', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    private function storeNotification(
+        User $user,
+        string $type,
+        string $title,
+        string $message,
+        array $data
+    ): void {
+        // Store notification in database
+        // This would require a notifications table
+        try {
+            \DB::table('notifications')->insert([
+                'user_id' => $user->id,
+                'type' => $type,
+                'title' => $title,
+                'message' => $message,
+                'data' => json_encode($data),
+                'read_at' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        } catch (\Exception $e) {
+            Log::warning('Failed to store notification in database', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    public function getUserNotifications(User $user, bool $unreadOnly = false): array
     {
         try {
-            $notification = $user->notifications()->findOrFail($notificationId);
-            $notification->update(['read_at' => now()]);
+            $query = \DB::table('notifications')->where('user_id', $user->id);
 
-            return true;
-        } catch (Exception $e) {
-            Log::error("Failed to mark notification as read: {$e->getMessage()}");
+            if ($unreadOnly) {
+                $query->whereNull('read_at');
+            }
+
+            return $query->orderBy('created_at', 'desc')
+                         ->limit(20)
+                         ->get()
+                         ->toArray();
+
+        } catch (\Exception $e) {
+            Log::error('Failed to fetch user notifications', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return [];
+        }
+    }
+
+    public function markAsRead(User $user, int $notificationId): bool
+    {
+        try {
+            return \DB::table('notifications')
+                     ->where('id', $notificationId)
+                     ->where('user_id', $user->id)
+                     ->update(['read_at' => now()]) > 0;
+
+        } catch (\Exception $e) {
+            Log::error('Failed to mark notification as read', [
+                'user_id' => $user->id,
+                'notification_id' => $notificationId,
+                'error' => $e->getMessage(),
+            ]);
+
             return false;
         }
     }
@@ -132,64 +188,36 @@ class NotificationService
     public function markAllAsRead(User $user): bool
     {
         try {
-            $user->notifications()->whereNull('read_at')->update(['read_at' => now()]);
-            return true;
-        } catch (Exception $e) {
-            Log::error("Failed to mark all notifications as read: {$e->getMessage()}");
+            return \DB::table('notifications')
+                     ->where('user_id', $user->id)
+                     ->whereNull('read_at')
+                     ->update(['read_at' => now()]) >= 0;
+
+        } catch (\Exception $e) {
+            Log::error('Failed to mark all notifications as read', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+
             return false;
         }
     }
 
     public function getUnreadCount(User $user): int
     {
-        return $user->notifications()->whereNull('read_at')->count();
-    }
-
-    private function shouldSendEmail(User $user, string $type): bool
-    {
-        $preferences = $user->preferences['notifications'] ?? [];
-
-        // Check if email notifications are enabled
-        if (!($preferences['email_notifications'] ?? true)) {
-            return false;
-        }
-
-        // Check specific type preferences
-        switch ($type) {
-            case 'analysis_complete':
-                return $preferences['analysis_complete'] ?? true;
-            case 'weekly_report':
-                return $preferences['weekly_reports'] ?? false;
-            case 'marketing_emails':
-                return $preferences['marketing_emails'] ?? false;
-            case 'subscription_expiring':
-            case 'subscription_expired':
-                return true; // Always send subscription notifications
-            default:
-                return true;
-        }
-    }
-
-    private function sendEmailNotification(User $user, string $title, string $message, array $data = []): void
-    {
         try {
-            // For now, we'll log the email. In production, you'd send actual emails
-            Log::info("Email notification would be sent to {$user->email}", [
-                'title' => $title,
-                'message' => $message,
-                'data' => $data,
+            return \DB::table('notifications')
+                     ->where('user_id', $user->id)
+                     ->whereNull('read_at')
+                     ->count();
+
+        } catch (\Exception $e) {
+            Log::error('Failed to get unread notification count', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
             ]);
 
-            // Uncomment and configure when email service is set up:
-            /*
-            Mail::raw($message, function ($mail) use ($user, $title) {
-                $mail->to($user->email)
-                     ->subject($title);
-            });
-            */
-
-        } catch (Exception $e) {
-            Log::error("Failed to send email notification: {$e->getMessage()}");
+            return 0;
         }
     }
 }
