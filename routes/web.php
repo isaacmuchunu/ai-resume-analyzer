@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ResumeController;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -49,10 +50,10 @@ Route::middleware(['web'])->group(function () {
             Route::get('/', [ResumeController::class, 'index'])->name('index');
             Route::get('/upload', function () {
                 return Inertia::render('Resumes/Upload', [
-                    'subscription' => auth()->user()->subscription ? [
-                        'plan' => auth()->user()->subscription->plan,
-                        'remaining_resumes' => auth()->user()->subscription->remaining_resumes,
-                        'can_upload' => auth()->user()->subscription->canUploadResume(),
+                    'subscription' => Auth::user()->subscription ? [
+                        'plan' => Auth::user()->subscription->plan,
+                        'remaining_resumes' => Auth::user()->subscription->remaining_resumes,
+                        'can_upload' => Auth::user()->subscription->canUploadResume(),
                     ] : null,
                 ]);
             })->name('upload.form');
@@ -72,6 +73,10 @@ Route::middleware(['web'])->group(function () {
             Route::post('/{resume}/editor/save', [\App\Http\Controllers\EditorController::class, 'saveVersion'])->name('editor.save');
             Route::get('/{resume}/editor/versions', [\App\Http\Controllers\EditorController::class, 'versions'])->name('editor.versions');
             Route::post('/{resume}/editor/versions/{version}/restore', [\App\Http\Controllers\EditorController::class, 'restoreVersion'])->name('editor.versions.restore');
+            
+            // Interactive ATS Editor
+            Route::get('/{resume}/interactive-editor', [\App\Http\Controllers\InteractiveEditorController::class, 'show'])->name('interactive-editor');
+            Route::post('/{resume}/interactive-editor/parse-sections', [\App\Http\Controllers\InteractiveEditorController::class, 'parseSections'])->name('interactive-editor.parse-sections');
         });
 
         // Settings management

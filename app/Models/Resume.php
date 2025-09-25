@@ -52,6 +52,26 @@ class Resume extends Model
         return $this->hasMany(ResumeSuggestion::class);
     }
 
+    public function sections(): HasMany
+    {
+        return $this->hasMany(ResumeSection::class);
+    }
+
+    public function atsSuggestions(): HasMany
+    {
+        return $this->hasMany(ATSSuggestion::class);
+    }
+
+    public function jobOptimizations(): HasMany
+    {
+        return $this->hasMany(JobOptimization::class);
+    }
+
+    public function activeJobOptimization(): ?JobOptimization
+    {
+        return $this->jobOptimizations()->active()->latest()->first();
+    }
+
     public function latestAnalysis(): ?AnalysisResult
     {
         return $this->analysisResults()->latest()->first();

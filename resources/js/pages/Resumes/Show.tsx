@@ -56,6 +56,11 @@ export default function ResumeShow() {
 							<Button variant="ghost"><ArrowLeft className="h-4 w-4 mr-2" /> Back</Button>
 						</Link>
 						<div className="flex items-center gap-2">
+							<Link href={`/resumes/${resume.id}/interactive-editor`}>
+								<Button variant="outline" size="sm">
+									<FileText className="h-4 w-4 mr-2" /> Interactive Editor
+								</Button>
+							</Link>
 							<Button onClick={handleReanalyze} variant="primary" size="sm">
 								<RefreshCcw className="h-4 w-4 mr-2" /> Reanalyze
 							</Button>

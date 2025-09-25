@@ -3,7 +3,9 @@
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Controllers\Api\ResumeApiController;
 use App\Http\Controllers\Api\AnalysisApiController;
+use App\Http\Controllers\Api\ResumeAnalysisController;
 use App\Http\Controllers\Api\UserApiController;
+use App\Http\Controllers\Api\WebhookController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -46,6 +48,30 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::post('/{resume}/reanalyze', [ResumeApiController::class, 'reanalyze'])
                 ->middleware('rate.limit:analysis')
                 ->name('reanalyze');
+            
+            // Real-time ATS analysis endpoints
+            Route::post('/{resume}/analyze-section', [ResumeAnalysisController::class, 'analyzeSection'])
+                ->middleware('rate.limit:analysis')
+                ->name('analyze-section');
+            Route::post('/{resume}/keyword-suggestions', [ResumeAnalysisController::class, 'getKeywordSuggestions'])
+                ->middleware('rate.limit:analysis')
+                ->name('keyword-suggestions');
+            Route::post('/{resume}/ats-preview', [ResumeAnalysisController::class, 'getATSPreview'])
+                ->middleware('rate.limit:analysis')
+                ->name('ats-preview');
+            Route::post('/{resume}/optimize-for-job', [ResumeAnalysisController::class, 'optimizeForJob'])
+                ->middleware('rate.limit:analysis')
+                ->name('optimize-for-job');
+            
+            // Section management
+            Route::put('/{resume}/sections/{section}', [ResumeAnalysisController::class, 'updateSectionWithAnalysis'])
+                ->name('sections.update');
+            
+            // Suggestion management
+            Route::post('/{resume}/suggestions/{suggestion}/apply', [ResumeAnalysisController::class, 'applySuggestion'])
+                ->name('suggestions.apply');
+            Route::post('/{resume}/suggestions/{suggestion}/dismiss', [ResumeAnalysisController::class, 'dismissSuggestion'])
+                ->name('suggestions.dismiss');
         });
 
         // Analysis endpoints
@@ -64,6 +90,6 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
 
 // Webhook endpoints (special handling)
 Route::prefix('webhooks')->name('api.webhooks.')->group(function () {
-    Route::post('/stripe', [\App\Http\Controllers\Api\WebhookController::class, 'stripe'])->name('stripe');
-    Route::post('/anthropic', [\App\Http\Controllers\Api\WebhookController::class, 'anthropic'])->name('anthropic');
+    Route::post('/stripe', [WebhookController::class, 'stripe'])->name('stripe');
+    Route::post('/anthropic', [WebhookController::class, 'anthropic'])->name('anthropic');
 });

@@ -193,7 +193,7 @@ export default function Register() {
                                     </div>
 
                                     {data.password_confirmation && data.password === data.password_confirmation && (
-                                        <div className="flex items-center space-x-1 text-green-600">
+                                        <div className="flex items-center space-x-1 text-slate-600">
                                             <CheckCircle className="h-4 w-4" />
                                             <span className="text-xs">Passwords match</span>
                                         </div>

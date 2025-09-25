@@ -85,6 +85,11 @@ export default function ResumesIndex() {
 										<Link href={`/resumes/${resume.id}/download`}>
 											<Button variant="ghost" size="sm"><Download className="h-4 w-4 mr-2" />Download</Button>
 										</Link>
+										<Link href={`/resumes/${resume.id}/interactive-editor`}>
+											<Button variant="outline" size="sm">
+												<FileText className="h-4 w-4 mr-2" />Edit
+											</Button>
+										</Link>
 										<Link href={`/resumes/${resume.id}`}>
 											<Button size="sm">View Details</Button>
 										</Link>

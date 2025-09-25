@@ -2,8 +2,7 @@
 
 namespace App\Services;
 
-use Mozex\Anthropic\AnthropicFacade as Anthropic;
-use Mozex\Anthropic\Enums\Model;
+use Anthropic\Laravel\Facades\Anthropic;
 
 class AnthropicService
 {
@@ -12,16 +11,17 @@ class AnthropicService
         $prompt = $this->buildAnalysisPrompt($resumeText, $options);
 
         $response = Anthropic::messages()
-            ->model(Model::CLAUDE_3_5_SONNET)
-            ->maxTokens(4000)
-            ->system('You are an expert resume analyzer and career consultant. Analyze resumes with precision and provide actionable insights.')
-            ->messages([
-                [
-                    'role' => 'user',
-                    'content' => $prompt
+            ->create([
+                'model' => 'claude-3-5-sonnet-20241022',
+                'max_tokens' => 4000,
+                'system' => 'You are an expert resume analyzer and career consultant. Analyze resumes with precision and provide actionable insights.',
+                'messages' => [
+                    [
+                        'role' => 'user',
+                        'content' => $prompt
+                    ]
                 ]
-            ])
-            ->send();
+            ]);
 
         return $this->parseAnalysisResponse($response);
     }
@@ -31,16 +31,17 @@ class AnthropicService
         $prompt = $this->buildJobMatchPrompt($resumeText, $jobDescription);
 
         $response = Anthropic::messages()
-            ->model(Model::CLAUDE_3_5_SONNET)
-            ->maxTokens(4000)
-            ->system('You are a resume optimization expert. Help candidates tailor their resumes for specific job opportunities.')
-            ->messages([
-                [
-                    'role' => 'user',
-                    'content' => $prompt
+            ->create([
+                'model' => 'claude-3-5-sonnet-20241022',
+                'max_tokens' => 4000,
+                'system' => 'You are a resume optimization expert. Help candidates tailor their resumes for specific job opportunities.',
+                'messages' => [
+                    [
+                        'role' => 'user',
+                        'content' => $prompt
+                    ]
                 ]
-            ])
-            ->send();
+            ]);
 
         return $this->parseOptimizationResponse($response);
     }
@@ -56,17 +57,36 @@ class AnthropicService
         $prompt .= "Return the response as a structured JSON with these categories.";
 
         $response = Anthropic::messages()
-            ->model(Model::CLAUDE_3_5_SONNET)
-            ->maxTokens(2000)
-            ->messages([
-                [
-                    'role' => 'user',
-                    'content' => $prompt
+            ->create([
+                'model' => 'claude-3-5-sonnet-20241022',
+                'max_tokens' => 2000,
+                'messages' => [
+                    [
+                        'role' => 'user',
+                        'content' => $prompt
+                    ]
                 ]
-            ])
-            ->send();
+            ]);
 
         return $this->parseSkillsResponse($response);
+    }
+
+    public function analyzeText(string $prompt): string
+    {
+        $response = Anthropic::messages()
+            ->create([
+                'model' => 'claude-3-5-sonnet-20241022',
+                'max_tokens' => 2000,
+                'system' => 'You are an expert resume and content analyzer. Provide detailed, actionable analysis and suggestions.',
+                'messages' => [
+                    [
+                        'role' => 'user',
+                        'content' => $prompt
+                    ]
+                ]
+            ]);
+
+        return $response['content'][0]['text'] ?? '';
     }
 
     private function buildAnalysisPrompt(string $resumeText, array $options): string
